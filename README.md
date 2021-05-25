@@ -3,8 +3,7 @@ deviantPHP
 
 Warning!
 --------
-**First of all**: This is not an official package from http://deviantart.com.  
-It is a wrapper for some of theirs functions and hooks because we needed some sort of library for our project http://boxconnect.org. That said, let's see, how we can help nevertheless.
+Fork from boxconnect/deviant-php
 
 Installation
 ------------
@@ -12,7 +11,7 @@ The simplest way to install the package, is via [composer](https://getcomposer.o
 
 	{
  		"require": {
-			"boxconnect/deviant-php": "dev-master" 
+			"devkea/deviant-php": "dev-master"  
 		}
 	}	
 
@@ -59,6 +58,7 @@ setToken 		| $access (string), $refresh (string)	| Sets the access and refresh t
 getToken 		| none 									| Returns the tokens as an associative array (access_token, refresh_token).
 setCredentials  | $credentials (array) 					| Sets the client_id and client_secret ($credentials = array("client_id" => "1234", "client_secret" => "secret")
 getCredentials  | none 									| Returns the credentials as associative array.
+getCollections  | $username (string), $session (bol), $mature (bol), $limit (int), $offset (int) | Returns deviations from user's collection.
 
 Problems/Wishes
 ---------------

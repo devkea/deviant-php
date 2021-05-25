@@ -1,14 +1,14 @@
 {
-    "name": "boxconnect/deviant-php",
-    "description": "DeviantArt SDK for PHP",
+    "name": "devkea/deviant-php",
+    "description": "DeviantArt SDK for PHP (fork boxconnect/deviant-php)",
     "keywords" : [ "deviantart", "boxconnect" ],
-    "homepage": "https://github.com/boxconnect/deviant-php",
+    "homepage": "https://github.com/devkea/deviant-php",
     "license": "MIT",
     "authors": [
         {
-            "name": "boxconnect",
-            "email": "bot@boxconnect.org",
-            "homepage": "http://boxconnect.org/"
+            "name": "devkea",
+            "email": "mail@devkea.ru",
+            "homepage": "https://devkea.ru"
         }
     ],
 

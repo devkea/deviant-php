@@ -2,9 +2,11 @@
 
 namespace DeviantPHP;
 
+use Illuminate\Support\Facades\Log;
+
 class DeviantPHP {
 
-    var $client_id, $client_secret, $redirect_uri, $scope, $user_agent = null;
+    var $client_id, $client_secret, $redirect_uri, $scope;
 
     private $da_oauth_url = "https://www.deviantart.com/oauth2";
     private $da_oauth_resource = "https://www.deviantart.com/api/v1/oauth2/";
@@ -14,20 +16,17 @@ class DeviantPHP {
     private $access_token, $refresh_token = null;
 
     function __construct($params=array()) {
-        $vars = array("client_id", "client_secret", "redirect_uri", "scope", "user_agent");
+        $vars = array("client_id", "client_secret", "redirect_uri", "scope");
 
         foreach ($vars as $var) {
             if (!empty($params[$var]))
                 $this->$var = $params[$var];
         }
 
-        // check user_agent
-        if (empty($this->user_agent)) $this->user_agent = $_SERVER["HTTP_USER_AGENT"];
-
         $this->checkFunctions();
     }
 
-    function authenticate() {
+    public function authenticate() {
         if (!empty($_GET['code'])) {
             $code = $_GET['code'];
             $access_token = $this->getAccessToken($code);
@@ -37,7 +36,7 @@ class DeviantPHP {
         }
     }
 
-    function createAuthUrl() {
+    public function createAuthUrl() {
         try {
             if (empty($this->client_id)) throw new \Exception("The client_id must not be empty.");
             if (empty($this->client_secret)) throw new \Exception("The client_secret must not be empty.");
@@ -51,7 +50,7 @@ class DeviantPHP {
         }
     }
 
-    function getAccessToken($code) {
+    public function getAccessToken($code) {
         $data = array();
         $data["grant_type"] = "authorization_code";
         $data["client_id"] = $this->client_id;
@@ -69,7 +68,7 @@ class DeviantPHP {
         }
     }
 
-    function refreshToken() {
+    public function refreshToken() {
         try {
             if (empty($this->refresh_token)) throw new \Exception("The refresh_token is empty.");
             $data = array();
@@ -87,10 +86,10 @@ class DeviantPHP {
         }
     }
 
-    function uploadFile($filename) {
+    public function uploadFile($filename) {
         try {
             if (!$this->isAuthenticated()) $this->refreshToken();
-            
+
             $data = array();
             $data["title"] = basename($filename);
             $data["access_token"] = $this->access_token;
@@ -103,15 +102,15 @@ class DeviantPHP {
             echo $e->getMessage();
         }
     }
-    
+
     // Get authorized user (whoami)
-    function getUser() {
+    public function getUser() {
         try {
             if (!$this->isAuthenticated()) $this->refreshToken();
-            
+
             $data = array();
             $data["access_token"] = $this->access_token;
-            
+
             $result = json_decode($this->doCurl($this->da_oauth_resource . "user/whoami", $data), true);
             if (!empty($result["error"])) throw new \Exception($result["error_description"]);
             return $result;
@@ -119,8 +118,28 @@ class DeviantPHP {
             echo $e->getMessage();
         }
     }
-    
-    function isAuthenticated() {
+
+    // Get profile info
+    public function getCollections($username, $session = false, $mature = true, $limit = 24, $offset = 0) {
+        try {
+            if (!$this->isAuthenticated()) $this->refreshToken();
+
+            $data = array();
+            $data["access_token"] = $this->access_token;
+            $data["with_session"] = $session;
+            $data["mature_content"] = $mature;
+            $data["limit"] = $limit;
+            $data["offset"] = $offset;
+
+            $result = json_decode($this->doCurl($this->da_oauth_resource . "collections/all", $data));
+            if (isset($result->error)) throw new \Exception($result->error_description);
+            return $result;
+        } catch(Exception $e) {
+            echo $e->getMessage();
+        }
+    }
+
+    public function isAuthenticated() {
         try {
             if (empty($this->access_token)) throw new \Exception("The access_token is empty.");
             if (empty($this->refresh_token)) throw new \Exception("The refresh_token is empty.");
@@ -135,29 +154,29 @@ class DeviantPHP {
     }
 
     // getter/setter functions
-    function setRedirect($url=null) {
+    public function setRedirect($url=null) {
         $this->redirect_uri = $url;
     }
 
-    function getRedirect() {
+    public function getRedirect() {
         return $this->redirect_uri;
     }
 
-    function setToken($access_token=null, $refresh_token=null) {
+    public function setToken($access_token=null, $refresh_token=null) {
         $this->access_token = $access_token;
         $this->refresh_token = $refresh_token;
     }
 
-    function getToken() {
+    public function getToken() {
         return array("access_token" => $this->access_token, "refresh_token" => $this->refresh_token);
     }
 
-    function setCredentials($credentials = array()) {
+    public function setCredentials($credentials = array()) {
         $this->client_id = $credentials["client_id"];
         $this->client_secret = $credentials["client_secret"];
     }
 
-    function getCredentials() {
+    public function getCredentials() {
         return array("client_id" => $this->client_id, "client_secret" => $this->client_secret);
     }
 
@@ -186,18 +205,19 @@ class DeviantPHP {
     // curl call
     private function doCurl($url, $data = array()) {
         $ch = curl_init();
+        $url = $url . '?' . http_build_query($data);
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_POST, count($data));
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-        curl_setopt($ch, CURLOPT_USERAGENT, $this->user_agent);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
         //execute post
         $result = curl_exec($ch);
+
         //close connection
         curl_close($ch);
 
-        return $result;        
+        return $result;
     }
 }
 
